@@ -78,7 +78,7 @@ public class Base64Decoder {
 		try {
 			fos = new FileOutputStream(fileLocation);
 			byte  byteArray[] = Base64.decodeBase64(encStr);
-			logger.info("Byte Array - "+new String(byteArray));
+			//logger.info("Byte Array - "+new String(byteArray));
 			fos.write(byteArray);
 			fos.close();
 		} catch (FileNotFoundException e) {

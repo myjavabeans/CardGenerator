@@ -20,14 +20,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.anjan.bean.CardNumberBean;
+import com.anjan.bean.Gen3DesBean;
 import com.anjan.cardgen.Base64Decoder;
+import com.anjan.cardgen.Gen3Des;
 import com.anjan.cardgen.Mod10Card;
 
 @Controller
 public class CardNumberController {
 
 	private static Logger logger = Logger.getLogger(CardNumberController.class);
-	
+
 	@RequestMapping(value = {"/default", "/"}, method = RequestMethod.GET)
 	public String defaultPage(Model model, Locale locale) {
 
@@ -72,7 +74,18 @@ public class CardNumberController {
 		
 	}
 	
-	@RequestMapping(value="/validateCard", method =  RequestMethod.POST)
+	@RequestMapping(value="/gen3des", method = RequestMethod.GET)
+	public String gen3DesPage(Model model, RedirectAttributes redirectAttributes){
+		
+		logger.info("Accessing Gen3Des page...");
+		
+		redirectAttributes.addFlashAttribute("gen3des","true");
+		
+		return "redirect:/";
+		
+	}
+	
+	@RequestMapping(value="/validate", method =  RequestMethod.POST)
 	public String validateCardPage(@Validated CardNumberBean bean, Model model, RedirectAttributes redirectAttributes){
 		
 		String cardNumber = bean.getBeginRange();
@@ -90,7 +103,7 @@ public class CardNumberController {
 		return "redirect:/";
 	}
 	
-	@RequestMapping(value="/generateCard", method =  RequestMethod.POST)
+	@RequestMapping(value="/generate", method =  RequestMethod.POST)
 	public String generateCardPage(@Validated CardNumberBean bean, Model model, RedirectAttributes redirectAttributes){
 		
 		String beginRange = bean.getBeginRange();
@@ -175,6 +188,36 @@ public class CardNumberController {
 			logger.warn("Exception Occurred", e);
 		}
 		
+	}
+	
+	@RequestMapping(value="/gen3des", method =  RequestMethod.POST)
+	public String gen3DesPage(@Validated Gen3DesBean bean, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes){
+		
+		String action = request.getParameter("action");
+		
+		String output = "";
+		
+		if(action.equalsIgnoreCase("Encrypt")){
+			logger.info("Encryption of String Started...");
+			
+			bean.setEncDecType("e");
+			
+			output = Gen3Des.encrypt(bean);
+			
+			logger.info("Encryption of String End...");
+		}else if(action.equalsIgnoreCase("Decrypt")){
+			logger.info("Decryption of String Started...");
+			
+			bean.setEncDecType("d");
+			
+			output = Gen3Des.decrypt(bean);
+			
+			logger.info("Decryption of String End...");
+		}
+		
+		redirectAttributes.addFlashAttribute("gen3des","true");
+		redirectAttributes.addFlashAttribute("msg", output);
+		return "redirect:/";
 	}
 	
 }

@@ -18,13 +18,22 @@ http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 	</beans:bean>
 	
 	<beans:bean id="properties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<beans:property name="location" value="WEB-INF/properties/cardgen.properties" />
+		<beans:property name="locations">
+			<beans:list>
+				<beans:value>WEB-INF/properties/cardgen.properties</beans:value>
+				<beans:value>WEB-INF/properties/db.properties</beans:value>
+			</beans:list>
+		</beans:property>
 	</beans:bean>
 	
 	<beans:bean id="cardGenProperties" class="com.anjan.cardgen.properties.CardGenProperties">
 		<beans:property name="limit" value="${cg.limit}" />
 		<beans:property name="clearCard" value="${cg.clearCard}" />
 		<beans:property name="filePath" value="${cg.filepath}" />
+		<beans:property name="arcotHome" value="${cg.arcothome}" />
+		<beans:property name="hostName" value="${cg.hostname}" />
+		<beans:property name="userName" value="${cg.user}" />
+		<beans:property name="password" value="${cg.password}" />
 	</beans:bean>
 
 </beans:beans>

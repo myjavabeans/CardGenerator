@@ -1,91 +1,174 @@
 package com.anjan.cardgen;
 
-import java.security.MessageDigest;
-import java.security.spec.KeySpec;
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.InputStream;
 
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESedeKeySpec;
-import javax.crypto.spec.IvParameterSpec;
+import org.apache.log4j.Logger;
 
-import org.apache.commons.codec.binary.Base64;
+import com.anjan.bean.Gen3DesBean;
+import com.anjan.cardgen.properties.CardGenProperties;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 
 public class Gen3Des {
 	
-	private KeySpec keySpec; 
-	  private SecretKey key; 
-	  private IvParameterSpec iv; 
-	   
-	  public Gen3Des(String keyString, String ivString) { 
-	    try { 
-	      final MessageDigest md = MessageDigest.getInstance("md5"); 
-	      final byte[] digestOfPassword = md.digest(Base64.decodeBase64(keyString.getBytes("utf-8"))); 
-	      final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24); 
-	      for (int j = 0, k = 16; j < 8;) { 
-	        keyBytes[k++] = keyBytes[j++]; 
-	      } 
-	       
-	      keySpec = new DESedeKeySpec(keyBytes); 
-	       
-	      key = SecretKeyFactory.getInstance("DESede").generateSecret(keySpec); 
-	       
-	      iv = new IvParameterSpec(ivString.getBytes()); 
-	    } catch(Exception e) { 
-	      e.printStackTrace(); 
-	    } 
-	  } 
-	   
-	  public String encrypt(String value) { 
-	    try { 
-	      Cipher ecipher = Cipher.getInstance("DESede/CBC/PKCS5Padding","SunJCE"); 
-	      ecipher.init(Cipher.ENCRYPT_MODE, key, iv); 
-	       
-	      if(value==null) 
-	        return null; 
-	       
-	      // Encode the string into bytes using utf-8 
-	      byte[] utf8 = value.getBytes("UTF8"); 
-	       
-	      // Encrypt 
-	      byte[] enc = ecipher.doFinal(utf8); 
-	       
-	      // Encode bytes to base64 to get a string 
-	      return new String(Base64.encodeBase64(enc),"UTF-8"); 
-	    } catch (Exception e) { 
-	      e.printStackTrace(); 
-	    } 
-	    return null; 
-	  } 
-	   
-	  public String decrypt(String value) { 
-	    try { 
-	      Cipher dcipher = Cipher.getInstance("DESede/CBC/PKCS5Padding","SunJCE"); 
-	      dcipher.init(Cipher.DECRYPT_MODE, key, iv); 
-	       
-	      if(value==null) 
-	        return null; 
-	       
-	      // Decode base64 to get bytes 
-	      byte[] dec = Base64.decodeBase64(value.getBytes()); 
-	       
-	      // Decrypt 
-	      byte[] utf8 = dcipher.doFinal(dec); 
-	       
-	      // Decode using utf-8 
-	      return new String(utf8, "UTF8"); 
-	    } catch (Exception e) { 
-	      e.printStackTrace(); 
-	    } 
-	    return null; 
-	  } 
-	  
-	  public static void main(String args[]){
-		  
-		  Gen3Des des = new Gen3Des("MasterKey", "dost1234");
-		  System.out.println(des.encrypt("Anjan"));
-		  
-	  }
+	private static Logger logger = Logger.getLogger(Gen3Des.class);
+	
+	private static String keyName = "";
+	private static String keyPin = "";
+	private static String deviceType = "";
+	private static String inputString = "";
+	private static String encDecType = "";
+	private static String arcotHome = CardGenProperties.arcotHome;
+	
+	private static String convertDeviceType(String deviceType){
+		
+		if(deviceType != null && !deviceType.isEmpty()){
+			
+			if(deviceType.equals("hardware")){
+				return "htest";
+			}else if(deviceType.equals("software")){
+				return "stest";
+			}
+			
+		}
+		
+		return "";
+		
+	}
+	
+	private static String validateBean(Gen3DesBean bean){
+		
+		keyName = bean.getKeyName();
+		keyPin = bean.getKeyPin();
+		deviceType = bean.getDeviceType();
+		inputString = bean.getInputString();
+		encDecType = bean.getEncDecType();
+		
+		if(keyName != null && keyName.isEmpty()){
+			logger.warn("Key Name cannot be Empty");
+			return "Please Enter Key Name";
+		}
+		
+		if(deviceType == null || (deviceType != null && deviceType.isEmpty())){
+			logger.warn("Device Type cannot be Empty");
+			return "Please select Device Type";
+		}
+		
+		if(inputString != null && inputString.isEmpty()){
+			logger.warn("Input String cannot be Empty");
+			return "Please select Input String";
+		}
+		
+		return "";
+		
+	}
+
+	
+	private static String executeCommand(String command){
+		
+		String output = "";
+	
+		JSch jSch = new JSch();
+		try {
+			Session session = jSch.getSession(CardGenProperties.userName, CardGenProperties.hostName, 22);
+			session.setConfig("StrictHostKeyChecking", "no");
+			session.setPassword(CardGenProperties.password);
+			session.connect();
+			
+			logger.info("Connected to HostName : "+CardGenProperties.hostName);
+			
+			Channel channel = session.openChannel("exec");
+			((ChannelExec) channel).setCommand(command);
+			channel.setInputStream(null);
+			((ChannelExec) channel).setErrStream(System.err);
+			
+			InputStream in = channel.getInputStream();
+			channel.connect();
+			
+			byte[] tmp = new byte[4096];
+			
+			while(true){
+				while(in.available() > 0){
+					int i = in.read(tmp);
+					
+					if(i < 0)
+						break;
+					
+					output = new String(tmp, 0, i); 
+					logger.info("Output : "+output);
+				}
+				
+				if(channel.isClosed()){
+					logger.info("Channel is closed with Exit Status "+channel.getExitStatus());
+					break;
+				}
+				
+				try{Thread.sleep(1000);}catch(Exception ee){return ee.getMessage();}
+				
+			}
+			
+			channel.disconnect();
+			session.disconnect();
+			
+			logger.info("Connection Closed...");
+			
+		} catch (JSchException e) {
+			logger.error("JSch Exception ", e);
+			return e.getMessage();
+		} catch (IOException e) {
+			logger.error("IOException ", e);
+			return e.getMessage();
+		}
+		
+		
+		return output;
+	}
+	
+	public static String decrypt(Gen3DesBean bean){
+		
+		logger.info("[KEYNAME - "+bean.getKeyName()+", PIN - "+bean.getKeyPin()+", DEVICE - "+bean.getDeviceType()+"]");
+		
+		String str = validateBean(bean);
+		
+		if(str != null && !str.isEmpty()){
+			return str;
+		}
+		
+		String command = CardGenProperties.arcotHome+"/bin/gen3des "+keyName+" "+keyPin+" -"+convertDeviceType(deviceType)+" -"+encDecType+" "+inputString;
+		
+		logger.info("Command Execution Started");
+		
+		String output = executeCommand(command);
+		
+		logger.info("Command Executed");
+		
+		return output;
+	}
+	
+	public static String encrypt(Gen3DesBean bean){
+		
+		logger.info("[KEYNAME - "+bean.getKeyName()+", PIN - "+bean.getKeyPin()+", DEVICE - "+bean.getDeviceType()+"]");
+		
+		String str = validateBean(bean);
+		
+		if(str != null && !str.isEmpty()){
+			return str;
+		}
+
+		String command = CardGenProperties.arcotHome+"/bin/gen3des "+keyName+" "+keyPin+" -"+convertDeviceType(deviceType)+" -"+encDecType+" "+inputString;
+		
+		logger.info("Command Execution Started");
+		
+		String output = executeCommand(command);
+		
+		logger.info("Command Executed");
+		
+		
+		return output;
+	}
 
 }

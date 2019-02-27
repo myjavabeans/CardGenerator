@@ -22,6 +22,10 @@ zoom: 0.75;
 
 </style>
 
+<script type="text/javascript">
+	var _formConfirm_submitted = false;
+</script>
+
 <title>Card Generator</title>
 </head>
 <body>
@@ -33,12 +37,13 @@ zoom: 0.75;
 			<td><a href="<c:url value='/validate'/>">Validate Card Number</a></td>
 			<td><a href="<c:url value='/generate'/>">Generate Card Number</a></td>
 			<td><a href="<c:url value='/decode'/>">Base64 Decoder</a></td>
+			<td><a href="<c:url value='/gen3des'/>">Gen3Des</a></td>
 		</tr>
 	</table>
 	
 	<c:if test="${!empty cardGen}">
 		<h2>Generate Mod10 Card Numbers</h2>
-		<form action="generateCard" method="post">
+		<form action="generate" method="post" onsubmit="if( _formConfirm_submitted == false ){ _formConfirm_submitted = true;return true }else{ alert('Please Wait... Your request is being processed!!!'); return false;  }">
 			<table>
 				<tr>
 					<td>Begin Range</td>
@@ -58,7 +63,7 @@ zoom: 0.75;
 	
 	<c:if test="${!empty valCard}">
 		<h2>Validate Mod10 Card Number</h2>
-		<form action="validateCard" method="post">
+		<form action="validate" method="post" onsubmit="if( _formConfirm_submitted == false ){ _formConfirm_submitted = true;return true }else{ alert('Please Wait... Your request is being processed!!!'); return false;  }">
 			<table>
 				<tr>
 					<td>Card Number</td>
@@ -74,7 +79,7 @@ zoom: 0.75;
 	
 	<c:if test="${!empty decImg}">
 		<h2>Decode Base64 String</h2>
-		<form action="decode" method="post">
+		<form action="decode" method="post" onsubmit="if( _formConfirm_submitted == false ){ _formConfirm_submitted = true;return true }else{ alert('Please Wait... Your request is being processed!!!'); return false;  }">
 			<table>
 				<tr>
 					<td>Enter Base64 String</td>
@@ -113,6 +118,37 @@ zoom: 0.75;
 			
 		</c:if>
 		
+	</c:if>
+	
+	<c:if test="${!empty gen3des}">
+		<h2>Encrypt Decrypt String - Gen3Des</h2>
+		<form action="gen3des" method="post" onsubmit="if( _formConfirm_submitted == false ){ _formConfirm_submitted = true;return true }else{ alert('Please Wait... Your request is being processed!!!'); return false;  }">
+			<table>
+				<tr>
+					<td>Key Name</td>
+					<td><input type="text" name="keyName" /></td>
+				</tr>
+				<tr>
+					<td>Key PIN</td>
+					<td><input type="text" name="keyPin" /></td>
+				</tr>
+				<tr>
+					<td>Device Type</td>
+					<td>
+						<input type="radio" name="deviceType" value="hardware">H/W
+						<input type="radio" name="deviceType" value="software">S/W
+					</td>
+				</tr>
+				<tr>
+					<td>Input String</td>
+					<td><input type="text" name="inputString" /></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td><input name="action" type="submit" value="Encrypt" />&nbsp;&nbsp;<input name="action" type="submit" value="Decrypt" /></td>
+				</tr>
+			</table>
+		</form>
 	</c:if>
 	
 	<p style="color:red">${msg}</p>
