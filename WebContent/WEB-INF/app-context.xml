@@ -35,5 +35,13 @@ http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 		<beans:property name="userName" value="${cg.user}" />
 		<beans:property name="password" value="${cg.password}" />
 	</beans:bean>
+	
+	<!-- Database Configuration -->
+	<beans:import resource="/resources/DataSource.xml" />
+	<beans:import resource="/resources/hibernate.cfg.xml" />
+	
+	<!-- Beans Declaration -->
+	<beans:import resource="/resources/employee.xml" />
+	<beans:import resource="/resources/issuer-details.xml" />
 
 </beans:beans>

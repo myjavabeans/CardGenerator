@@ -30,7 +30,7 @@ zoom: 0.75;
 </head>
 <body>
 
-	<p>The time on the server is ${serverTime}. Author - Anjan</p>
+	<p>The time on the ${server} is ${serverTime}. Author - Anjan</p>
 
 	<table border="1">
 		<tr>
@@ -38,6 +38,7 @@ zoom: 0.75;
 			<td><a href="<c:url value='/generate'/>">Generate Card Number</a></td>
 			<td><a href="<c:url value='/decode'/>">Base64 Decoder</a></td>
 			<td><a href="<c:url value='/gen3des'/>">Gen3Des</a></td>
+			<td><a href="<c:url value='/getIssuerDetails'/>">Issuer Details</a></td>
 		</tr>
 	</table>
 	
@@ -151,6 +152,22 @@ zoom: 0.75;
 		</form>
 	</c:if>
 	
+	<c:if test="${!empty issuerDetails}">
+		<h2>Issuer Details</h2>
+		<form action="getIssuerDetails" method="post" onsubmit="if( _formConfirm_submitted == false ){ _formConfirm_submitted = true;return true }else{ alert('Please Wait... Your request is being processed!!!'); return false;  }">
+			<table>
+				<tr>
+					<td>BankDirName</td>
+					<td><input type="text" name="bankdirname" /></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td><input type="submit" value="Get Details" /></td>
+				</tr>
+			</table>
+		</form>
+	</c:if>
+	
 	<p style="color:red">${msg}</p>
 	
 	<c:if test="${!empty cardNumbers}">
@@ -165,6 +182,119 @@ zoom: 0.75;
 		</table>
 	</c:if>
 	
+	
+	<c:if test="${!empty headers_callouts}">
+	<!-- Callout Details -->
+		<table border="1">
+			<tr>
+				<th colspan="6">Callout Details</th>
+			</tr>
+			<tr style="background-color:#BFC9CA">
+				<c:forEach items="${headers_callouts}" var="headers">
+				<th>${headers}</th>
+				</c:forEach>
+			</tr>
+		
+			<c:forEach items="${list_callouts}" var="columnMap">
+			<tr>
+				<c:forEach items="${columnMap}" var="entry">
+				<td>${entry.value}</td>
+				</c:forEach>
+			</tr>
+			</c:forEach>
+		</table>
+		<br/>
+	</c:if>
+
+	
+	<c:if test="${!empty headers_ra}">
+	<!-- RA Details -->
+		<table border="1">
+			<tr>
+				<th colspan="5">RA Details</th>
+			</tr>
+			<tr style="background-color:#BFC9CA">
+				<c:forEach items="${headers_ra}" var="headers">
+				<th>${headers}</th>
+				</c:forEach>
+			</tr>
+			<c:forEach items="${list_ra}" var="columnMap">
+			<tr>
+				<c:forEach items="${columnMap}" var="entry">
+				<td>${entry.value}</td>
+				</c:forEach>
+			</tr>
+			</c:forEach>
+		</table>
+		<br/>
+	</c:if>
+
+	
+	<c:if test="${!empty headers_cap}">
+	<!-- CAP Details -->
+	<table border="1">
+		<tr>
+				<th colspan="7">CAP Details</th>
+		</tr>
+		<tr style="background-color:#BFC9CA">
+			<c:forEach items="${headers_cap}" var="headers">
+			<th>${headers}</th>
+			</c:forEach>
+		</tr>
+		<c:forEach items="${list_cap}" var="columnMap">
+		<tr>
+			<c:forEach items="${columnMap}" var="entry">
+			<td>${entry.value}</td>
+			</c:forEach>
+		</tr>
+		</c:forEach>
+	</table>
+	<br/>
+	</c:if>
+
+	
+	<c:if test="${!empty headers_contents}">
+	<!-- Content Details -->
+	<table border="1">
+		<tr>
+				<th colspan="7">Content Details</th>
+		</tr>
+		<tr style="background-color:#BFC9CA">
+			<c:forEach items="${headers_contents}" var="headers">
+			<th>${headers}</th>
+			</c:forEach>
+		</tr>
+		<c:forEach items="${list_contents}" var="columnMap">
+		<tr>
+			<c:forEach items="${columnMap}" var="entry">
+			<td>${entry.value}</td>
+			</c:forEach>
+		</tr>
+		</c:forEach>
+	</table>
+	<br/>
+	</c:if>
+	
+	<c:if test="${!empty headers_e}">
+	<!-- Employee Details -->
+	<table border="1">
+		<tr>
+				<th colspan="2">Employee Details</th>
+		</tr>
+		<tr style="background-color:#BFC9CA">
+			<c:forEach items="${headers_e}" var="headers">
+			<th>${headers}</th>
+			</c:forEach>
+		</tr>
+		<c:forEach items="${list_e}" var="columnMap">
+		<tr>
+			<c:forEach items="${columnMap}" var="entry">
+			<td>${entry.value}</td>
+			</c:forEach>
+		</tr>
+		</c:forEach>
+	</table>
+	</c:if>
 	
 </body>
 </html>
